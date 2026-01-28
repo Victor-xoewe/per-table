@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>围餐计算</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{padding:20px;font-family:Arial;background:#f5f5f5;}
+        .box{max-width:400px;margin:0 auto;background:white;padding:30px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,0.1);}
+        h2{text-align:center;color:#333;margin-bottom:25px;}
+        .input-box{margin-bottom:15px;display:flex;gap:10px;}
+        input{flex:1;padding:12px;border:2px solid #eee;border-radius:8px;font-size:16px;outline:none;}
+        input:focus{border-color:#07c160;}
+        button{padding:12px 16px;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;}
+        .calc-btn{width:100%;background:#07c160;color:white;padding:14px;font-size:18px;margin:10px 0 20px;}
+        .calc-btn:active{background:#06b058;}
+        .clear-btn{background:#ff7875;color:white;}
+        .clear-btn:active{background:#ff5752;}
+        .result{line-height:2.2; font-size:17px; color:#333;margin-bottom:25px;}
+        .result span{font-weight:bold;color:#e64340;}
+        .record-title{font-size:16px;font-weight:bold;color:#333;margin-bottom:10px;}
+        .record-list{font-size:15px;line-height:1.8;color:#666;border-top:1px dashed #eee;padding-top:10px;}
+        .record-list li{list-style:none;margin:5px 0;padding:6px;border-radius:4px;background:#f9f9f9;}
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>围餐计算</h2>
+        <div class="input-box">
+            <input type="number" id="tableNum" placeholder="请输入桌数（≥1）" min="1">
+            <button class="clear-btn" onclick="clearInput()">清空</button>
+        </div>
+        <button class="calc-btn" onclick="calcFruit()">点击计算</button>
+        
+        <div class="result" id="result"></div>
+
+        <div class="record-title">最近计算记录</div>
+        <ul class="record-list" id="recordList"></ul>
+    </div>
+
+    <script>
+        // 页面加载先读取历史记录
+        window.onload = function() {
+            loadRecord();
+        }
+
+        // 清空输入框
+        function clearInput() {
+            document.getElementById('tableNum').value = '';
+            document.getElementById('result').innerHTML = '';
+        }
+
+        // 核心计算：单独算每种水果
+        function calcFruit() {
+            let total = parseInt(document.getElementById('tableNum').value);
+            let result = document.getElementById('result');
+            
+            if(!total || total < 1){
+                result.innerHTML = "请输入正确的桌数（≥1）";
+                return;
+            }
+
+            // 单独计算 无关联
+            let watermelon = Math.ceil(total / 8);
+            let watermelonKg = watermelon * 7;
+            let hami = Math.ceil(total / 4);
+            let hamiKg = hami * 3;
+            let pitaya = Math.ceil(total / 1);
+            let pitayaKg = pitaya * 1;
+
+            // 显示结果
+            let resHtml = 
+            `总桌数：<span>${total}</span>桌<br>
+            【西瓜 单独计算】<br>
+            需<span>${watermelon}</span>个，总重<span>${watermelonKg}</span>kg<br>
+            <br>
+            【哈密瓜 单独计算】<br>
+            需<span>${hami}</span>个，总重<span>${hamiKg}</span>kg<br>
+            <br>
+            【火龙果 单独计算】<br>
+            需<span>${pitaya}</span>个，总重<span>${pitayaKg}</span>kg`;
+            result.innerHTML = resHtml;
+
+            // 保存记录+刷新显示
+            saveRecord(total, watermelon, watermelonKg, hami, hamiKg, pitaya, pitayaKg);
+            loadRecord();
+        }
+
+        // 保存计算记录（本地存储，最多存3条）
+        function saveRecord(t, w, wk, hm, hmk, p, pk) {
+            let records = JSON.parse(localStorage.getItem('fruitCalcRecord') || '[]');
+            // 新增记录（带时间）
+            let newRecord = {
+                time: new Date().toLocaleString(),
+                table: t,
+                watermelon: `${w}个(${wk}kg)`,
+                hami: `${hm}个(${hmk}kg)`,
+                pitaya: `${p}个(${pk}kg)`
+            };
+            records.unshift(newRecord); // 新记录放前面
+            if(records.length > 3) records.pop(); // 只留最近3条
+            localStorage.setItem('fruitCalcRecord', JSON.stringify(records));
+        }
+
+        // 读取并显示记录
+        function loadRecord() {
+            let records = JSON.parse(localStorage.getItem('fruitCalcRecord') || '[]');
+            let list = document.getElementById('recordList');
+            list.innerHTML = records.length == 0 ? '<li>暂无记录</li>' : '';
+            records.forEach(item => {
+                list.innerHTML += `<li>${item.time}<br>桌数${item.table}｜西瓜${item.watermelon}｜哈密瓜${item.hami}｜火龙果${item.pitaya}</li>`;
+            });
+        }
+    </script>
+</body>
+</html>
